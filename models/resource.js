@@ -22,14 +22,11 @@ const Resource = mongoose.model('Resource', new mongoose.Schema({
         unique: true
     },
     tags:{
-        type: String,
-        required: true,
-        minlength: 1,
-        maxlength: 1024
+        type: Array
     }
 }));
 
-function validateUser(user) {
+function validateResource(resource) {
     const schema = {
         title: Joi.string().min(1).max(64).required(),
         description: Joi.string().min(1).max(1024).required(),
@@ -37,7 +34,7 @@ function validateUser(user) {
         tags: Joi.array().max(5)
     };
   
-    return Joi.validate(user, schema);
+    return Joi.object(schema).validate(resource);
 }
   
 
