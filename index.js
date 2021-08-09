@@ -1,3 +1,4 @@
+const config = require('config');
 const mongoose = require('mongoose');
 const express = require('express');
 
@@ -5,6 +6,11 @@ const resources = require('./routes/resources');
 const users = require('./routes/users');
 
 const app = express();
+
+if(!config.get('jwtPrivateKey')){
+  console.error('FATAL ERROR: jwtPrivateKey is not defined.')
+  process.exit(1);
+}
 
 mongoose.connect('mongodb://localhost/switchBase', { useNewUrlParser: true, useUnifiedTopology: true, useCreateIndex: true, useFindAndModify: false })
   .then(() => console.log('Connected to MongoDB...'))
