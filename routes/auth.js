@@ -13,6 +13,8 @@ function validate(req){
     email: Joi.string().min(1).max(255).required().email(),
     password: Joi.string().min(1).max(64).required()
   }
+
+  return Joi.object(schema).validate(req.body);
 }
 
 router.post('/', async (req, res) => {
@@ -26,7 +28,7 @@ router.post('/', async (req, res) => {
   const validPassword = bcrypt.compare(req.body.password, validUser.password);
   if (!validPassword) return res.status(400).send('Invalid Email or Password');
 
-  const token = jwt.sign({ _id: validUser._id }, config.get('jwtPrivateKey'));
+  const token = validUser.generateAuthToken();
   res.send(token);
 
 });

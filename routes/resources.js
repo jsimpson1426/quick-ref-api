@@ -1,9 +1,24 @@
 const auth = require('../middleware/auth');
 const admin = require('../middleware/admin');
 const {Resource, validate} = require('../models/resource');
+
 const mongoose = require('mongoose');
 const express = require('express');
+const multer = require('multer');
+
 const router = express.Router();
+
+//multer storage setup
+const storage = multer.diskStorage({
+  destination: './public/uploads/',
+  filename: function(req, file, cb){
+      cb(null, file.fieldname + '-' + Date.now() + path.extname(file.originalname));
+  }
+});
+
+//upload function initialized
+const upload = multer({storage: storage}).single('quickRef');
+
 
 router.get('/',auth, async (req, res) => {
   try{
@@ -25,7 +40,7 @@ router.get('/:id',auth, async (req, res) => {
   }
 });
 
-router.post('/',[auth,admin], async (req,res) => {
+router.post('/',[auth,admin, upload], async (req,res) => {
   try{
     const {error} = validate(req.body);
     if (error) return res.status(400).send(error.details[0].message);
@@ -33,7 +48,7 @@ router.post('/',[auth,admin], async (req,res) => {
     const resource = new Resource({
       title: req.body.title,
       description: req.body.description,
-      filename: req.body.filename,
+      filename: req.file.filename,
       tags: [...req.body.tags]
     });
 
@@ -46,7 +61,7 @@ router.post('/',[auth,admin], async (req,res) => {
 
 });
 
-router.put('/:id', [auth,admin], async (req, res) => {
+router.put('/:id', [auth,admin,upload], async (req, res) => {
   try{
     const { error } = validate(req.body); 
     if (error) return res.status(400).send(error.details[0].message);
@@ -55,7 +70,7 @@ router.put('/:id', [auth,admin], async (req, res) => {
       { 
         title: req.body.title,
         description: req.body.description,
-        filename: req.body.filename,
+        filename: req.file.filename,
         tags: [...req.body.tags]
       }, 
       { new: true }
