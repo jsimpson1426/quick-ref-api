@@ -1,3 +1,5 @@
+const uploadPath = './public/uploads/';
+
 const auth = require('../middleware/auth');
 const admin = require('../middleware/admin');
 const {Resource, validate} = require('../models/resource');
@@ -5,19 +7,23 @@ const {Resource, validate} = require('../models/resource');
 const mongoose = require('mongoose');
 const express = require('express');
 const multer = require('multer');
+const fs = require('fs');
 
 const router = express.Router();
 
 //multer storage setup
 const storage = multer.diskStorage({
-  destination: './public/uploads/',
+  destination: uploadPath,
   filename: function(req, file, cb){
       cb(null, file.fieldname + '-' + Date.now() + path.extname(file.originalname));
   }
 });
 
+//multer file limitations
+const limits = {fileSize: 80000000, files: 1};
+
 //upload function initialized
-const upload = multer({storage: storage}).single('quickRef');
+const upload = multer({storage: storage, limits: limits}).single('quickRef');
 
 
 router.get('/',auth, async (req, res) => {
@@ -42,7 +48,10 @@ router.get('/:id',auth, async (req, res) => {
 
 router.post('/',[auth,admin, upload], async (req,res) => {
   try{
-    const {error} = validate(req.body);
+
+    let resourceData = [...req.body]
+    resourceData.filename = req.file.filename;
+    const {error} = validate(resourceData);
     if (error) return res.status(400).send(error.details[0].message);
 
     const resource = new Resource({
@@ -63,22 +72,26 @@ router.post('/',[auth,admin, upload], async (req,res) => {
 
 router.put('/:id', [auth,admin,upload], async (req, res) => {
   try{
-    const { error } = validate(req.body); 
-    if (error) return res.status(400).send(error.details[0].message);
 
-    const resource = await Resource.findByIdAndUpdate(req.params.id,
-      { 
-        title: req.body.title,
-        description: req.body.description,
-        filename: req.file.filename,
-        tags: [...req.body.tags]
-      }, 
-      { new: true }
-    );
-
+    const resource = await Resource.findById(req.params.id);
     if (!resource) return res.status(404).send('Resource not found.');
 
-    res.send(resource);
+    const originalFileName = resource.filename;
+
+    resource.title = req.body.title;
+    resource.description = req.body.description;
+    resource.filename = req.file.filename || originalFileName;
+    resource.tags = [...req.body.tags];
+    
+    const { error } = validate(resource); 
+    if (error) return res.status(400).send(error.details[0].message);
+
+    const result = await resource.save();
+    if(result.filename !== originalFileName){
+      fs.unlink(uploadPath + originalFileName);
+    }
+
+    res.send(result);
 
   } catch (err){
     res.status(400).send(err.message);
@@ -90,6 +103,7 @@ router.delete('/:id', [auth,admin], async (req, res) => {
     const deletedResource = await Resource.findByIdAndDelete(req.params.id);
     if(!deletedResource) return res.status(404).send('Resource Not Found. Nothing was deleted.');
 
+    fs.unlink(uploadPath + deletedResource.filename);
     res.send(deletedResource);
 
   } catch (err) {
