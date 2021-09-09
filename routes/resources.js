@@ -8,6 +8,7 @@ const mongoose = require('mongoose');
 const express = require('express');
 const multer = require('multer');
 const fs = require('fs');
+const path = require('path');
 
 const router = express.Router();
 
@@ -23,7 +24,7 @@ const storage = multer.diskStorage({
 const limits = {fileSize: 80000000, files: 1};
 
 //upload function initialized
-const upload = multer({storage: storage, limits: limits}).single('quickRef');
+const upload = multer({storage: storage, limits: limits}).single('file');
 
 
 router.get('/',auth, async (req, res) => {
@@ -49,16 +50,16 @@ router.get('/:id',auth, async (req, res) => {
 router.post('/',[auth,admin, upload], async (req,res) => {
   try{
 
-    let resourceData = [...req.body]
-    resourceData.filename = req.file.filename;
-    const {error} = validate(resourceData);
+    req.body.filename = req.file.filename;
+    req.body.tags = JSON.parse(req.body.tags);
+    const {error} = validate(req.body);
     if (error) return res.status(400).send(error.details[0].message);
 
     const resource = new Resource({
       title: req.body.title,
       description: req.body.description,
       filename: req.file.filename,
-      tags: [...req.body.tags]
+      tags: req.body.tags
     });
 
     const result = await resource.save();
@@ -80,8 +81,8 @@ router.put('/:id', [auth,admin,upload], async (req, res) => {
 
     resource.title = req.body.title;
     resource.description = req.body.description;
-    resource.filename = req.file.filename || originalFileName;
-    resource.tags = [...req.body.tags];
+    resource.filename = req.file ? req.file.filename : originalFileName;
+    resource.tags = JSON.parse(req.body.tags);
     
     const { error } = validate(resource); 
     if (error) return res.status(400).send(error.details[0].message);

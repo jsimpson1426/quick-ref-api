@@ -20,10 +20,10 @@ mongoose.connect('mongodb://localhost/quickRef', { useNewUrlParser: true, useUni
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use('/api/resources', resources);
-app.use('/api/login', login)
+app.use('/api/login', login);
 app.use('/api/users', users);
 
 app.use(express.static('public'));
 
-const port = process.env.PORT || 3000;
+const port = process.env.PORT || 5000;
 app.listen(port, () => console.log(`Listening on port ${port}...`));
