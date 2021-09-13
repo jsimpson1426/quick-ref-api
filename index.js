@@ -25,9 +25,5 @@ app.use('/api/users', users);
 
 app.use(express.static('public'));
 
-<<<<<<< HEAD
-const port = process.env.PORT || 3001;
-=======
 const port = process.env.PORT || 5000;
->>>>>>> 6378832f0693b9ba29f8e2c5826ee9fd9e7db26a
 app.listen(port, () => console.log(`Listening on port ${port}...`));
