@@ -51,7 +51,9 @@ router.post('/',[auth,admin, upload], async (req,res) => {
   try{
 
     req.body.filename = req.file.filename;
-    req.body.tags = JSON.parse(req.body.tags);
+    if(req.body.tags){
+      req.body.tags = JSON.parse(req.body.tags);
+    }
     const {error} = validate(req.body);
     if (error) return res.status(400).send(error.details[0].message);
 
