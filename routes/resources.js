@@ -68,6 +68,7 @@ router.post('/',[auth,admin, upload], async (req,res) => {
     res.send(result);
 
   } catch (err){
+    await fs.unlink(uploadPath + req.filename);
     res.status(400).send(err.message);
   }
 
@@ -77,6 +78,7 @@ router.put('/:id', [auth,admin,upload], async (req, res) => {
   try{
 
     const resource = await Resource.findById(req.params.id);
+    console.log(resource);
     if (!resource) return res.status(404).send('Resource not found.');
 
     const originalFileName = resource.filename;
@@ -91,7 +93,7 @@ router.put('/:id', [auth,admin,upload], async (req, res) => {
 
     const result = await resource.save();
     if(result.filename !== originalFileName){
-      fs.unlink(uploadPath + originalFileName);
+      await fs.unlink(uploadPath + originalFileName);
     }
 
     res.send(result);
@@ -102,17 +104,16 @@ router.put('/:id', [auth,admin,upload], async (req, res) => {
 });
 
 router.delete('/:id', [auth,admin], async (req, res) => {
-  try{
-    const deletedResource = await Resource.findByIdAndDelete(req.params.id);
-    if(!deletedResource) return res.status(404).send('Resource Not Found. Nothing was deleted.');
-
-    fs.unlink(uploadPath + deletedResource.filename);
-    res.send(deletedResource);
-
-  } catch (err) {
-    console.log(err);
-    res.status(400).send(err.message);
-  }
+  const deletedResource = await Resource.findByIdAndDelete(req.params.id);
+  if(!deletedResource) return res.status(404).send('Resource Not Found. Nothing was deleted.');
+  
+  res.send(deletedResource);
+  fs.unlink(uploadPath + deletedResource.filename, (err) =>{
+    if(err){
+      console.log(err);
+      res.status(400).send(err.message);
+    }
+  });
   
 });
 
