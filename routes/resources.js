@@ -38,9 +38,8 @@ router.get('/',auth, async (req, res) => {
 
 router.get('/:id',auth, async (req, res) => {
   try{
-    const resource = await Resource.findById(req.params.id);
+    const resource = await Resource.findOne({ _id: req.params.id });
     if(!resource) return res.status(404).send('Resource Not Found');
-
     res.send(resource);
   }catch(err){
     res.status(400).send(err.message);
@@ -77,28 +76,30 @@ router.post('/',[auth,admin, upload], async (req,res) => {
 router.put('/:id', [auth,admin,upload], async (req, res) => {
   try{
 
-    const resource = await Resource.findById(req.params.id);
-    console.log(resource);
+    const resource = await Resource.findOne({ _id: req.params.id });
     if (!resource) return res.status(404).send('Resource not found.');
 
-    const originalFileName = resource.filename;
-
-    resource.title = req.body.title;
-    resource.description = req.body.description;
-    resource.filename = req.file ? req.file.filename : originalFileName;
-    resource.tags = JSON.parse(req.body.tags);
+    //mongoose adds fields _id, $__ and __v which causes the validate function to throw an error
+    //this validatResource removes that possibility
+    let validResource = {
+      title: req.body.title,
+      description: req.body.description,
+      filename: resource.filename,
+      tags: JSON.parse(req.body.tags)
+    }
     
-    const { error } = validate(resource); 
+    const { error } = validate(validResource);
     if (error) return res.status(400).send(error.details[0].message);
 
-    const result = await resource.save();
-    if(result.filename !== originalFileName){
-      await fs.unlink(uploadPath + originalFileName);
-    }
+    resource.title = validResource.title;
+    resource.description = validResource.description;
+    resource.tags = validResource.tags;
 
+    const result = await resource.save();
     res.send(result);
 
   } catch (err){
+    console.log(err);
     res.status(400).send(err.message);
   }
 });
