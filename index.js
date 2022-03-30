@@ -8,6 +8,11 @@ const users = require('./routes/users');
 const login = require('./routes/auth');
 const { origin } = require('./config/origin.json');
 
+//For production
+const helmet = require('helmet');
+const compression = require('compression');
+//
+
 const app = express();
 
 if(!config.get('jwtPrivateKey')){
@@ -18,6 +23,11 @@ if(!config.get('jwtPrivateKey')){
 mongoose.connect('mongodb://localhost/quickRef', { useNewUrlParser: true, useUnifiedTopology: true, useCreateIndex: true, useFindAndModify: false })
   .then(() => console.log('Connected to MongoDB...'))
   .catch(err => console.error('Could not connect to MongoDB...'));
+
+//For Production
+app.use(helmet());
+app.use(compression());
+//
 
 app.use(cors(origin))
 app.use(express.json());
