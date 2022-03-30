@@ -20,7 +20,7 @@ if(!config.get('jwtPrivateKey')){
   process.exit(1);
 }
 
-mongoose.connect('mongodb://localhost/quickRef', { useNewUrlParser: true, useUnifiedTopology: true, useCreateIndex: true, useFindAndModify: false })
+mongoose.connect(config.get('db'), { useNewUrlParser: true, useUnifiedTopology: true, useCreateIndex: true, useFindAndModify: false })
   .then(() => console.log('Connected to MongoDB...'))
   .catch(err => console.error('Could not connect to MongoDB...'));
 
