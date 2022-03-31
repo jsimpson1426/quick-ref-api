@@ -1,4 +1,4 @@
 {
   "jwtPrivateKey": "quickref_jwtPrivateKey",
-  "db": "quickref-db"
+  "db": "quickref_db"
 }
