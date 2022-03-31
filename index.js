@@ -6,7 +6,6 @@ const cors = require('cors');
 const resources = require('./routes/resources');
 const users = require('./routes/users');
 const login = require('./routes/auth');
-const { origin } = require('./config/origin.json');
 
 //For production
 const helmet = require('helmet');
@@ -29,9 +28,7 @@ app.use(helmet());
 app.use(compression());
 //
 
-app.use(cors({
-  origin: '*'
-}));
+app.use(cors());
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
