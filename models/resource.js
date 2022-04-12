@@ -12,7 +12,7 @@ const Resource = mongoose.model('Resource', new mongoose.Schema(
         description:{
             type: String,
             minlength: 1,
-            maxlength: 64
+            maxlength: 1024
         },
         filename:{
             type: String,
